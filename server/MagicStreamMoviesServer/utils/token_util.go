@@ -2,10 +2,13 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/eichiarakaki/magic-stream/database"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -106,4 +109,52 @@ func UpdateAllTokens(token, refreshToken, userID string) (err error) {
 	}
 
 	return nil
+}
+
+func GetAccessToken(c *gin.Context) (string, error) {
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("no authorization header found")
+	}
+
+	tokenString := authHeader[len("Bearer "):]
+	if tokenString == "" {
+		return "", errors.New("no bearer token found")
+	}
+
+	return tokenString, nil
+}
+
+// ValidateToken validates a JWT string and returns its claims.
+//
+// How it works:
+// 1. Parse the JWT and load its data into SignedDetails.
+// 2. Verify the signature with the server's secret key.
+// 3. Ensure the signing method is HMAC.
+// 4. Check expiration.
+// 5. Return claims or an error.
+func ValidateToken(tokenString string) (*SignedDetails, error) {
+
+	// Struct where we want to decode the claims
+	claims := &SignedDetails{}
+
+	// Parse and validate the token
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure correct signing method (HS256)
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	}
+
+	// Check expiration timestamp
+	if claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, errors.New("token is expired")
+	}
+
+	return claims, nil
 }
