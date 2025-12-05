@@ -7,6 +7,7 @@ import (
 
 	"github.com/eichiarakaki/magic-stream/database"
 	"github.com/eichiarakaki/magic-stream/models"
+	"github.com/eichiarakaki/magic-stream/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -75,8 +76,7 @@ func RegisterUser() gin.HandlerFunc {
 		}
 		if count > 0 {
 			c.JSON(http.StatusConflict, gin.H{
-				"Error":   "User already exists",
-				"details": "User already exists",
+				"Error": "User already exists",
 			})
 			return
 		}
@@ -99,5 +99,84 @@ func RegisterUser() gin.HandlerFunc {
 
 		// Return the insertion result to the client
 		c.JSON(http.StatusCreated, result)
+	}
+}
+
+// LoginUser handles the login process for a user.
+// It validates the incoming credentials, checks whether the user exists,
+// compares the provided password with the stored hashed password,
+// generates new JWT access and refresh tokens, updates them in the database,
+// and finally returns user information along with the tokens.
+func LoginUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// Parse JSON payload into the UserLogin model
+		var userLogin models.UserLogin
+		if err := c.ShouldBindJSON(&userLogin); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"Error": "Invalid input data",
+			})
+			return
+		}
+
+		// Create a context for database operations
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		// Try to find the user in the database by email
+		var foundUser models.User
+		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
+		if err != nil {
+			// User was not found, or error occurred
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"Error": "Invalid email",
+			})
+			return
+		}
+
+		// Compare the provided password with the stored hashed password
+		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(userLogin.Password))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"Error": "Invalid password",
+			})
+			return
+		}
+
+		// Generate access and refresh tokens for the authenticated user
+		token, refreshToken, err := utils.GenerateAllTokens(
+			foundUser.Email,
+			foundUser.FirstName,
+			foundUser.LastName,
+			foundUser.Role,
+			foundUser.UserID,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error": "Failed to generate the tokens",
+			})
+			return
+		}
+
+		// Store the new tokens in the user's document in MongoDB
+		err = utils.UpdateAllTokens(token, refreshToken, foundUser.UserID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error": "Failed to update the tokens",
+			})
+			return
+		}
+
+		// Return user information and the generated tokens
+		c.JSON(http.StatusOK, models.UserResponse{
+			UserID:         foundUser.UserID,
+			FirstName:      foundUser.FirstName,
+			LastName:       foundUser.LastName,
+			Email:          foundUser.Email,
+			Role:           foundUser.Role,
+			FavoriteGenres: foundUser.FavoriteGenres,
+			Token:          token,
+			RefreshToken:   refreshToken,
+		})
 	}
 }
