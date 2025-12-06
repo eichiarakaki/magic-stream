@@ -174,3 +174,22 @@ func GetUserRoleFromContext(c *gin.Context) (string, error) {
 
 	return role.(string), nil
 }
+
+func ValidateRefreshToken(tokenString string) (*SignedDetails, error) {
+	claims := &SignedDetails{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(SecretRefreshKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	}
+
+	if claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, errors.New("token is expired")
+	}
+
+	return claims, nil
+}

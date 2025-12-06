@@ -55,6 +55,7 @@ func AuthMiddleware(client *mongo.Client) gin.HandlerFunc {
 		if dbUser.Token == "" || dbUser.Token != tokenString {
 			// Token was revoked/rotated or does not match → unauthorized
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "token is not valid (revoked or rotated)"})
+			c.Abort()
 			return
 		}
 
