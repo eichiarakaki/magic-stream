@@ -25,7 +25,7 @@ import (
 
 // Gets all the movies
 var movieCollection *mongo.Collection = database.OpenCollection("movies")
-var rankingCollection *mongo.Collection = database.OpenCollection("ranking")
+var rankingCollection *mongo.Collection = database.OpenCollection("rankings")
 
 var validate = validator.New()
 
@@ -149,7 +149,7 @@ func AdminReviewUpdate() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
-				gin.H{"Error": "Error getting review ranking",
+				gin.H{"error": "Error getting review ranking",
 					"details": err.Error()},
 			)
 			return
@@ -159,8 +159,8 @@ func AdminReviewUpdate() gin.HandlerFunc {
 		update := bson.M{"$set": bson.M{
 			"admin_review": req.AdminReview,
 			"ranking": bson.M{
-				"ranking_value": rankVal,
 				"ranking_name":  sentiment,
+				"ranking_value": rankVal,
 			},
 		}}
 
@@ -191,7 +191,7 @@ func GetReviewRanking(admin_review string) (string, int, error) {
 	sentimentDelimited := ""
 
 	for _, ranking := range rankings {
-		if ranking.RankingValue != 999 {
+		if ranking.RankingValue != 999 && ranking.RankingValue != 0 {
 			sentimentDelimited = sentimentDelimited + ranking.RankingName + ","
 		}
 	}
@@ -209,6 +209,7 @@ func GetReviewRanking(admin_review string) (string, int, error) {
 
 	// Connecting to Gemini
 	ctx := context.Background()
+	// The client gets the API key from the environment variable `GEMINI_API_KEY`.
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		log.Println("Warning: genai client failed", err)
@@ -246,7 +247,12 @@ func GetRankings() ([]models.Ranking, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			log.Println(err)
+		}
+	}(cursor, ctx)
 
 	if err = cursor.All(ctx, &rankings); err != nil {
 		return nil, err
