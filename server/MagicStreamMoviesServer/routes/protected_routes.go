@@ -8,10 +8,11 @@ import (
 )
 
 func SetupProtectedRoutes(router *gin.Engine, client *mongo.Client) {
-	router.Use(middleware.AuthMiddleware())
+	router.Use(middleware.AuthMiddleware(client))
 
 	router.GET("/movie/:imdb_id", controller.GetMovie(client))
 	router.POST("/add-movie", controller.AddMovie(client))
 	router.GET("/recommended-movies", controller.GetRecommendedMovies(client))
 	router.PATCH("/update-review/:imdb_id", controller.AdminReviewUpdate(client))
+	router.POST("/logout", controller.LogoutUser(client))
 }

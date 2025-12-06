@@ -178,3 +178,47 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+// LogoutUser logs out ONLY the currently authenticated user.
+func LogoutUser(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDValue, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
+			return
+		}
+		userID, ok := userIDValue.(string)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to convert user ID to string"})
+			return
+		}
+
+		// Remove tokens in database
+		// Passing empty strings "" means: no valid tokens stored
+		err := utils.UpdateAllTokens("", "", userID, client)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Error logging out",
+				"details": err.Error(),
+			})
+			return
+		}
+
+		// Delete the access token cookie in the browser.
+		// MaxAge: -1 tells the browser to immediately remove the cookie.
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "access_token",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,   // expire immediately
+			Secure:   true, // send only over HTTPS
+			HttpOnly: true, // JS cannot read the cookie
+			SameSite: http.SameSiteStrictMode,
+		})
+
+		// Final response to the client
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Successfully logged out",
+		})
+	}
+}
