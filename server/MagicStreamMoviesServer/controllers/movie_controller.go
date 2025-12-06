@@ -480,3 +480,31 @@ func GetUsersFavoriteGenres(userID string, client *mongo.Client) ([]string, erro
 
 	return genreNames, nil
 }
+
+func GetGenres(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var genreCollection *mongo.Collection = database.OpenCollection("genres", client)
+
+		cursor, err := genreCollection.Find(ctx, bson.D{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching movie genres", "details": err.Error()})
+			return
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				log.Println(err)
+			}
+		}(cursor, ctx)
+
+		var genres []models.Genre
+		if err = cursor.All(ctx, &genres); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, genres)
+	}
+}
