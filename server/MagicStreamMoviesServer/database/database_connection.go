@@ -12,8 +12,8 @@ import (
 
 // Here we do the requests of the content from the MongoDB database
 
-// DBIsntance Returns a MongoDB instance
-func DBInstance() *mongo.Client {
+// Connect Returns a MongoDB instance
+func Connect() *mongo.Client {
 	// Here we're loading the environment variables
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -44,9 +44,7 @@ func DBInstance() *mongo.Client {
 	return client
 }
 
-var Client *mongo.Client = DBInstance()
-
-func OpenCollection(collectionName string) *mongo.Collection {
+func OpenCollection(collectionName string, client *mongo.Client) *mongo.Collection {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -56,7 +54,7 @@ func OpenCollection(collectionName string) *mongo.Collection {
 	if databaseName == "" {
 		log.Fatal("DATABASE_NAME environment variable not set")
 	}
-	collection := Client.Database(databaseName).Collection(collectionName)
+	collection := client.Database(databaseName).Collection(collectionName)
 
 	if collection == nil {
 		fmt.Println("Error fetching collection")

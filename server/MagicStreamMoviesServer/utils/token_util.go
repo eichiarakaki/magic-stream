@@ -14,8 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-var userCollection *mongo.Collection = database.OpenCollection("users")
-
 // SignedDetails represents the custom JWT claims that will be embedded
 // inside both the access token and the refresh token.
 // It includes user identity information plus the standard registered claims.
@@ -84,7 +82,7 @@ func GenerateAllTokens(email, firstName, lastName, role, userID string) (string,
 
 // UpdateAllTokens stores the new access token and refresh token in the user's MongoDB document.
 // This is typically called after login or when refreshing tokens.
-func UpdateAllTokens(token, refreshToken, userID string) (err error) {
+func UpdateAllTokens(token, refreshToken, userID string, client *mongo.Client) (err error) {
 
 	// Create a timeout context for the database update operation
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
@@ -103,7 +101,7 @@ func UpdateAllTokens(token, refreshToken, userID string) (err error) {
 	}
 
 	// Update the user document by ID
-	_, err = userCollection.UpdateOne(ctx, bson.M{"user_id": userID}, updateData)
+	_, err = database.OpenCollection("users", client).UpdateOne(ctx, bson.M{"user_id": userID}, updateData)
 	if err != nil {
 		return err
 	}

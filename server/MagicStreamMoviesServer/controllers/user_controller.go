@@ -15,8 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var userCollection *mongo.Collection = database.OpenCollection("users")
-
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -28,7 +26,7 @@ func HashPassword(password string) (string, error) {
 // RegisterUser handles the registration of a new user.
 // It validates input data, checks for duplicate email addresses,
 // hashes the password, and inserts the user into the MongoDB collection.
-func RegisterUser() gin.HandlerFunc {
+func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Parse and bind the incoming JSON payload to the User model
@@ -66,7 +64,7 @@ func RegisterUser() gin.HandlerFunc {
 		defer cancel()
 
 		// Ensure the email is unique by counting documents with the same email
-		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
+		count, err := database.OpenCollection("users", client).CountDocuments(ctx, bson.M{"email": user.Email})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"Error":   "Failed to check existing user",
@@ -88,7 +86,7 @@ func RegisterUser() gin.HandlerFunc {
 		user.UpdatedAt = time.Now()
 
 		// Insert the user into the MongoDB collection
-		result, err := userCollection.InsertOne(ctx, user)
+		result, err := database.OpenCollection("users", client).InsertOne(ctx, user)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"Error":   "Failed to add user",
@@ -107,7 +105,7 @@ func RegisterUser() gin.HandlerFunc {
 // compares the provided password with the stored hashed password,
 // generates new JWT access and refresh tokens, updates them in the database,
 // and finally returns user information along with the tokens.
-func LoginUser() gin.HandlerFunc {
+func LoginUser(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Parse JSON payload into the UserLogin model
@@ -125,7 +123,7 @@ func LoginUser() gin.HandlerFunc {
 
 		// Try to find the user in the database by email
 		var foundUser models.User
-		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
+		err := database.OpenCollection("users", client).FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
 		if err != nil {
 			// User was not found, or error occurred
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -159,7 +157,7 @@ func LoginUser() gin.HandlerFunc {
 		}
 
 		// Store the new tokens in the user's document in MongoDB
-		err = utils.UpdateAllTokens(token, refreshToken, foundUser.UserID)
+		err = utils.UpdateAllTokens(token, refreshToken, foundUser.UserID, client)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"Error": "Failed to update the tokens",
