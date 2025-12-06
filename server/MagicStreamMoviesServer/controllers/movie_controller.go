@@ -115,9 +115,21 @@ func AdminReviewUpdate() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
+		role, err := utils.GetUserRoleFromContext(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"Error": "user role not found"})
+			return
+		}
+		log.Println(role)
+		if role != "ADMIN" {
+			c.JSON(http.StatusForbidden, gin.H{"Error": "You do not have admin role to update"})
+			return
+		}
+
 		movieID := c.Param("imdb_id")
 		if movieID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"Error": "Movie ID required"})
+			return
 		}
 
 		var req struct {
@@ -193,7 +205,7 @@ func GetReviewRanking(admin_review string) (string, int, error) {
 	}
 
 	base_prompt_template := os.Getenv("BASE_PROMPT_TEMPLATE")
-	base_prompt := strings.Replace(base_prompt_template, "{rankings}", sentimentDelimited, 1)
+	base_prompt := strings.Replace(base_prompt_template, "{rankings}", sentimentDelimited, -1)
 
 	// Connecting to Gemini
 	ctx := context.Background()
@@ -204,7 +216,7 @@ func GetReviewRanking(admin_review string) (string, int, error) {
 	}
 	response, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-3-pro-preview",
+		"gemini-2.5-flash",
 		genai.Text(base_prompt+admin_review),
 		nil,
 	)

@@ -164,6 +164,15 @@ func GetUserIDFromContext(c *gin.Context) (string, error) {
 	if !exists {
 		return "", errors.New("no user id found")
 	}
-	
+
 	return userID.(string), nil
+}
+
+func GetUserRoleFromContext(c *gin.Context) (string, error) {
+	role, exists := c.Get("role")
+	if !exists {
+		return "", errors.New("no role found")
+	}
+
+	return role.(string), nil
 }
