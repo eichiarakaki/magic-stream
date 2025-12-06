@@ -60,7 +60,7 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Create a context with a 100-second timeout for database operations
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		// Ensure the email is unique by counting documents with the same email
@@ -118,7 +118,7 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Create a context for database operations
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		// Try to find the user in the database by email
@@ -157,7 +157,7 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Store the new tokens in the user's document in MongoDB
-		err = utils.UpdateAllTokens(token, refreshToken, foundUser.UserID, client)
+		err = utils.UpdateAllTokens(token, refreshToken, foundUser.UserID, client, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"Error": "Failed to update the tokens",
@@ -216,7 +216,7 @@ func LogoutUser(client *mongo.Client) gin.HandlerFunc {
 
 		// Remove tokens in database
 		// Passing empty strings "" means: no valid tokens stored
-		err := utils.UpdateAllTokens("", "", userID, client)
+		err := utils.UpdateAllTokens("", "", userID, client, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Error logging out",
@@ -246,7 +246,7 @@ func LogoutUser(client *mongo.Client) gin.HandlerFunc {
 
 func RefreshTokenHandler(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		refreshToken, err := c.Cookie("refresh_token")
@@ -271,7 +271,7 @@ func RefreshTokenHandler(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		newToken, newRefreshToken, _ := utils.GenerateAllTokens(user.Email, user.FirstName, user.LastName, user.Role, user.UserID)
-		err = utils.UpdateAllTokens(newToken, newRefreshToken, user.UserID, client)
+		err = utils.UpdateAllTokens(newToken, newRefreshToken, user.UserID, client, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update the tokens"})
 			return

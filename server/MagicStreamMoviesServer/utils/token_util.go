@@ -82,10 +82,10 @@ func GenerateAllTokens(email, firstName, lastName, role, userID string) (string,
 
 // UpdateAllTokens stores the new access token and refresh token in the user's MongoDB document.
 // This is typically called after login or when refreshing tokens.
-func UpdateAllTokens(token, refreshToken, userID string, client *mongo.Client) (err error) {
+func UpdateAllTokens(token, refreshToken, userID string, client *mongo.Client, c *gin.Context) (err error) {
 
 	// Create a timeout context for the database update operation
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 	defer cancel()
 
 	// RFC3339 timestamp for updated_at

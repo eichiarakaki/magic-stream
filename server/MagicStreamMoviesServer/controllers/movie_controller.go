@@ -27,7 +27,7 @@ var validate = validator.New()
 
 func GetMovies(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		var movies []models.Movie
@@ -56,7 +56,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 
 func GetMovie(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		movieID := c.Param("imdb_id") // You can obtain the parameter by using :imdb_id when mapping the URL
@@ -77,7 +77,7 @@ func GetMovie(client *mongo.Client) gin.HandlerFunc {
 
 func AddMovie(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		var movie models.Movie
@@ -108,7 +108,7 @@ func AddMovie(client *mongo.Client) gin.HandlerFunc {
 // then the results are updated to the specified video/movie.
 func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		role, err := utils.GetUserRoleFromContext(c)
@@ -141,7 +141,7 @@ func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		sentiment, rankVal, err := GetReviewRanking(req.AdminReview, client)
+		sentiment, rankVal, err := GetReviewRanking(req.AdminReview, client, c)
 		if err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
@@ -178,8 +178,8 @@ func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-func GetReviewRanking(admin_review string, client *mongo.Client) (string, int, error) {
-	rankings, err := GetRankings(client)
+func GetReviewRanking(admin_review string, client *mongo.Client, c *gin.Context) (string, int, error) {
+	rankings, err := GetRankings(client, c)
 	if err != nil {
 		return "", 0, err
 	}
@@ -233,10 +233,10 @@ func GetReviewRanking(admin_review string, client *mongo.Client) (string, int, e
 }
 
 // GetRankings request the existing rankings data from the MongoDB
-func GetRankings(client *mongo.Client) ([]models.Ranking, error) {
+func GetRankings(client *mongo.Client, c *gin.Context) ([]models.Ranking, error) {
 	var rankings []models.Ranking
 
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 	defer cancel()
 
 	cursor, err := database.OpenCollection("rankings", client).Find(ctx, bson.M{})
@@ -312,7 +312,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// 2. Fetch user's favorite genres from DB
-		favorite_genres, err := GetUsersFavoriteGenres(userID, client)
+		favorite_genres, err := GetUsersFavoriteGenres(userID, client, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
 			return
@@ -346,7 +346,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// 6. Create context with timeout
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		// 7. Perform the query
@@ -425,9 +425,9 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 //	     { "genre_name": "Horror" }
 //	  ]
 //	}
-func GetUsersFavoriteGenres(userID string, client *mongo.Client) ([]string, error) {
+func GetUsersFavoriteGenres(userID string, client *mongo.Client, c *gin.Context) ([]string, error) {
 	// Create a 100s timeout so Mongo doesn't block forever.
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
 	defer cancel()
 
 	// Filter → find the document where user_id == given userID
@@ -483,7 +483,7 @@ func GetUsersFavoriteGenres(userID string, client *mongo.Client) ([]string, erro
 
 func GetGenres(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(c.Request.Context(), 100*time.Second)
 		defer cancel()
 
 		var genreCollection *mongo.Collection = database.OpenCollection("genres", client)
