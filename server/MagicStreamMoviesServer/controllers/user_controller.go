@@ -171,8 +171,8 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			Path:  "/",
 			// Domain:   "localhost",
 			MaxAge:   86400,
-			Secure:   true,
-			HttpOnly: true,
+			Secure:   false,
+			HttpOnly: false,
 			SameSite: http.SameSiteNoneMode,
 		})
 		http.SetCookie(c.Writer, &http.Cookie{
@@ -181,8 +181,8 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			Path:  "/",
 			// Domain:   "localhost",
 			MaxAge:   604800,
-			Secure:   true,
-			HttpOnly: true,
+			Secure:   false,
+			HttpOnly: false,
 			SameSite: http.SameSiteNoneMode,
 		})
 

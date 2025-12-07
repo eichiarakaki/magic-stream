@@ -2,12 +2,24 @@ import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import { Navbar } from "react-bootstrap";
-import { useNavigate, NavLink, Link } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
+import useAuth from "../hooks/useAuth.tsx";
+import useAxiosPrivate from "../hooks/useAxiosPrivate.tsx";
 
 const Header = () => {
   const navigate = useNavigate();
-  const [auth, setAuth] = useState(false);
+  const { auth } = useAuth();
+  const axiosPrivate = useAxiosPrivate();
+
+  const logout = async () => {
+    const response = await axiosPrivate.post("/logout");
+    if (response.status === 200) {
+      console.log("Logged out successfully");
+    } else {
+      console.log("Error while logging out");
+    }
+    navigate("/");
+  };
 
   return (
     <Navbar
@@ -34,9 +46,13 @@ const Header = () => {
             {auth ? (
               <>
                 <span>
-                  Hello, <strong>Name</strong>
+                  Hello, <strong>{auth.first_name}</strong>
                 </span>
-                <Button variant={"outline-light"} size={"sm"}>
+                <Button
+                  variant={"outline-light"}
+                  size={"sm"}
+                  onClick={() => logout()}
+                >
                   LogOut
                 </Button>
               </>
