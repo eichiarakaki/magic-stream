@@ -1,41 +1,47 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import axiosClient from "../../api/axiosConfig.ts";
-import Movies from '../movies/Movies.tsx';
+import Movies from "../movies/Movies.tsx";
 import Movie from "../movie/Movie.tsx";
 
-const Home = () => {
-    const [movies, setMovies] = useState([Movie]);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+const Home = ({ updateMovieReview }) => {
+  const [movies, setMovies] = useState([Movie]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        const fetchMovies = async () => {
-            setLoading(true);
-            setMessage("");
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setLoading(true);
+      setMessage("");
 
-            try {
-                const response = await axiosClient.get("/movies");
-                setMovies(response.data);
-                if (response.data.length === 0) {
-                    setMessage("There are currently no movies available!");
-                }
-            } catch (e) {
-                console.error(e);
-                setMessage("Error fetching movies");
-            } finally {
-                setLoading(false);
-            }
+      try {
+        const response = await axiosClient.get("/movies");
+        setMovies(response.data);
+        if (response.data.length === 0) {
+          setMessage("There are currently no movies available!");
         }
-        fetchMovies();
-    }, []);
+      } catch (e) {
+        console.error(e);
+        setMessage("Error fetching movies");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, []);
 
-    return (
-        <>
-            {loading ? (
-                <h2>Loading...</h2>
-            ) : <Movies movies={movies} message={message}></Movies>}
-        </>
-    )
-}
+  return (
+    <>
+      {loading ? (
+        <h2>Loading...</h2>
+      ) : (
+        <Movies
+          movies={movies}
+          updateMovieReview={updateMovieReview}
+          message={message}
+        ></Movies>
+      )}
+    </>
+  );
+};
 
 export default Home;
