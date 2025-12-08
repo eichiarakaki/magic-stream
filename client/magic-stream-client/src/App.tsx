@@ -42,7 +42,10 @@ function App() {
         <Route path={"/register"} element={<Register />}></Route>
         <Route path={"/login"} element={<Login />}></Route>
         <Route element={<RequiredAuth />}></Route>
-        <Route path={"/recommended-movies"} element={<Recommended />}></Route>
+        <Route
+          path={"/recommended-movies"}
+          element={<Recommended updateMovieReview={updateMovieReview} />}
+        ></Route>
         <Route path={"/review/:imdb_id"} element={<Review />}></Route>
       </Routes>
     </>

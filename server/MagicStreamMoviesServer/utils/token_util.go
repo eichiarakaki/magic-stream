@@ -110,16 +110,20 @@ func UpdateAllTokens(token, refreshToken, userID string, client *mongo.Client, c
 }
 
 func GetAccessToken(c *gin.Context) (string, error) {
-	authHeader := c.Request.Header.Get("Authorization")
-	if authHeader == "" {
-		return "", errors.New("no authorization header found")
-	}
+	//authHeader := c.Request.Header.Get("Authorization")
+	//if authHeader == "" {
+	//	return "", errors.New("no authorization header found")
+	//}
+	//
+	//tokenString := authHeader[len("Bearer "):]
+	//if tokenString == "" {
+	//	return "", errors.New("no bearer token found")
+	//}
 
-	tokenString := authHeader[len("Bearer "):]
-	if tokenString == "" {
-		return "", errors.New("no bearer token found")
+	tokenString, err := c.Cookie("access_token")
+	if err != nil {
+		return "", err
 	}
-
 	return tokenString, nil
 }
 

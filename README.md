@@ -1,6 +1,6 @@
 # MagicStream 🎬✨
 
-Movie streaming platform with AI recommendation built with modern web technologies (React/Go/gin-gonic/MongoDB)
+Movie streaming platform with AI recommendation built with modern web technologies (React/TypeScript/Go/gin-gonic/MongoDB)
 
 ---
 
@@ -25,7 +25,7 @@ It also demonstrates how **MongoDB** can serve as a reliable, scalable database 
 
 ## Tech Stack
 
-| Frontend / Client | JavaScript / React |
+| Frontend / Client | TypeScript / React |
 | Backend / Server | Go / gin-gonic |
 | Storage / Database | MongoDB |
  

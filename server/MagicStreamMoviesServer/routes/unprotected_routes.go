@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func SetupUnprotectedRoutes(router *gin.Engine, client *mongo.Client) {
+func SetupUnProtectedRoutes(router *gin.Engine, client *mongo.Client) {
 
 	router.GET("/movies", controller.GetMovies(client))
 	router.POST("/register", controller.RegisterUser(client))

@@ -3,8 +3,12 @@ import axiosClient from "../../api/axiosConfig.ts";
 import Movies from "../movies/Movies.tsx";
 import Movie from "../movie/Movie.tsx";
 
-const Home = ({ updateMovieReview }) => {
-  const [movies, setMovies] = useState([Movie]);
+const Home = ({
+  updateMovieReview,
+}: {
+  updateMovieReview: (imdb_id: string) => void;
+}) => {
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 

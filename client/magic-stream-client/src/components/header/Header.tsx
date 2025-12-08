@@ -40,7 +40,7 @@ const Header = ({ handleLogout }) => {
                   variant={"outline-light"}
                   size={"sm"}
                   onClick={() => {
-                    handleLogout;
+                    handleLogout();
                   }}
                 >
                   LogOut

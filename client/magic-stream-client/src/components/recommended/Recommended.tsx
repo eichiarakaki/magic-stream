@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import Movies from "../movies/Movies.tsx";
 import type Movie from "../movie/Movie.tsx";
 
-const Recommended = () => {
+const Recommended = ({
+  updateMovieReview,
+}: {
+  updateMovieReview: (imdb_id: string) => void;
+}) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -17,6 +21,7 @@ const Recommended = () => {
       try {
         const response = await axiosPrivate.get("/recommended-movies");
         setMovies(response.data);
+        console.log("DATA:", response.data);
       } catch (error) {
         console.error("Error fetching recommended movies:", error);
       } finally {
@@ -31,7 +36,11 @@ const Recommended = () => {
       {loading ? (
         <h2>Loading...</h2>
       ) : (
-        <Movies movies={movies} message={message} />
+        <Movies
+          movies={movies}
+          message={message}
+          updateMovieReview={updateMovieReview}
+        />
       )}
     </>
   );

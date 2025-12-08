@@ -12,7 +12,7 @@ const Movies = ({
   return (
     <div className={"container mt-4"}>
       <div className={"row"}>
-        {movies && movies.length > 0 ? (
+        {Array.isArray(movies) && movies.length > 0 ? (
           movies.map((movie) => (
             <Movie
               key={movie._id}

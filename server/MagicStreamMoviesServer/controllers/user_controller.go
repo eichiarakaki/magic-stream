@@ -165,26 +165,26 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:  "access_token",
-			Value: token,
-			Path:  "/",
-			// Domain:   "localhost",
-			MaxAge:   86400,
-			Secure:   false,
-			HttpOnly: false,
-			SameSite: http.SameSiteNoneMode,
-		})
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:  "refresh_token",
-			Value: refreshToken,
-			Path:  "/",
-			// Domain:   "localhost",
-			MaxAge:   604800,
-			Secure:   false,
-			HttpOnly: false,
-			SameSite: http.SameSiteNoneMode,
-		})
+        http.SetCookie(c.Writer, &http.Cookie{
+            Name:     "access_token",
+            Value:    token,
+            Path:     "/",
+            Domain:   "localhost",
+            MaxAge:   86400,
+            Secure:   true,
+            HttpOnly: true,
+            SameSite: http.SameSiteNoneMode,
+        })
+        http.SetCookie(c.Writer, &http.Cookie{
+            Name:     "refresh_token",
+            Value:    refreshToken,
+            Path:     "/",
+            Domain:   "localhost",
+            MaxAge:   604800,
+            Secure:   true,
+            HttpOnly: true,
+            SameSite: http.SameSiteNoneMode,
+        })
 
 		// Return user information and the generated tokens
 		c.JSON(http.StatusOK, models.UserResponse{
@@ -194,8 +194,8 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			Email:          foundUser.Email,
 			Role:           foundUser.Role,
 			FavoriteGenres: foundUser.FavoriteGenres,
-			Token:          token,
-			RefreshToken:   refreshToken,
+			//Token:          token,
+			//RefreshToken:   refreshToken,
 		})
 	}
 }
@@ -231,10 +231,10 @@ func LogoutUser(client *mongo.Client) gin.HandlerFunc {
 			Name:     "access_token",
 			Value:    "",
 			Path:     "/",
-			MaxAge:   -1,   // expire immediately
-			Secure:   true, // send only over HTTPS
+			MaxAge:   -1, // expire immediately
+			Secure:   false,
 			HttpOnly: true, // JS cannot read the cookie
-			SameSite: http.SameSiteStrictMode,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		// Final response to the client

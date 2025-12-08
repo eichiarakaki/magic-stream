@@ -1,31 +1,23 @@
 import axios from "axios";
-import useAuth from "./useAuth.tsx";
 import { useEffect } from "react";
 
 const apiURL = import.meta.env.VITE_API_BASE_URL;
-const axiosPrivate = axios.create({
-  baseURL: apiURL,
-  withCredentials: true,
-});
 
-const useAxiosPrivate = () => {
-  const { auth } = useAuth();
-
+export const useAxiosPrivate = () => {
   useEffect(() => {
-    const requestInterceptor = axiosPrivate.interceptors.request.use(
+    const reqIntercept = axios.interceptors.request.use(
       (config) => {
-        if (auth?.token) {
-          config.headers.Authorization = `Bearer ${auth.token}`;
-        }
+        config.withCredentials = true;
+        config.baseURL = apiURL;
         return config;
       },
       (error) => Promise.reject(error),
     );
-    return () => {
-      axiosPrivate.interceptors.response.eject(requestInterceptor);
-    };
-  }, [auth]);
-  return axiosPrivate;
+
+    return () => axios.interceptors.request.eject(reqIntercept);
+  }, []);
+
+  return axios;
 };
 
 export default useAxiosPrivate;
