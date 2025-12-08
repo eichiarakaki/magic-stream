@@ -21,9 +21,11 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      const response = await axiosClient.post("/logout", {
-        user_id: auth.user_id,
-      });
+      const response = await axiosClient.post(
+        "/logout",
+        { user_id: auth.user_id },
+        { withCredentials: true }
+      );
       console.log(response);
       setAuth(null);
       console.log("User logged out");

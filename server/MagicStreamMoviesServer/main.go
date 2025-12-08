@@ -66,7 +66,9 @@ func main() {
 	routes.SetupUnProtectedRoutes(router, client)
 	routes.SetupProtectedRoutes(router, client)
 
-	if err := router.Run(":8080"); err != nil {
-		fmt.Println("Failed to start server", err)
+	certFile := "../../localhost.pem"
+	keyFile := "../../localhost-key.pem"
+	if err := router.RunTLS(":8080", certFile, keyFile); err != nil {
+		fmt.Println("Failed to start HTTPS server", err)
 	}
 }

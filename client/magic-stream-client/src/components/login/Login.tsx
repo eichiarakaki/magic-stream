@@ -26,7 +26,11 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await axiosClient.post("/login", { email, password });
+      const response = await axiosClient.post(
+        "/login",
+        { email, password },
+        { withCredentials: true }
+      );
       console.log(response.data);
       if (response.data.error) {
         setError(response.data.error);

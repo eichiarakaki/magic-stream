@@ -1,7 +1,10 @@
 import axios from "axios";
 import { useEffect } from "react";
 
-const apiURL = import.meta.env.VITE_API_BASE_URL;
+const apiURL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "https://localhost:8080";
 
 export const useAxiosPrivate = () => {
   useEffect(() => {
