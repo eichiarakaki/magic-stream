@@ -39,7 +39,7 @@ const Login = () => {
       // console.log(response.data);
       setAuth(response.data);
 
-      // localStorage.setItem('user', JSON.stringify(response.data));
+      localStorage.setItem('user', JSON.stringify(response.data));
       // Handle successful login (e.g., store token, redirect)
       navigate(from, { replace: true });
       //navigate('/');

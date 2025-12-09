@@ -10,6 +10,7 @@ import Recommended from "./components/recommended/Recommended.tsx";
 import axiosClient from "./api/axiosConfig.ts";
 import Review from "./components/review/Review.tsx";
 import useAuth from "./components/hooks/useAuth.tsx";
+import StreamMovie from "./components/stream/StreamMovie.tsx";
 
 function App() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ function App() {
           element={<Recommended updateMovieReview={updateMovieReview} />}
         ></Route>
         <Route path={"/review/:imdb_id"} element={<Review />}></Route>
+        <Route path={"/stream/:yt_id"} element={<StreamMovie />}></Route>
       </Routes>
     </>
   );
