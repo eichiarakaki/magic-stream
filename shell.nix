@@ -2,5 +2,6 @@
 pkgs.mkShell {
     buildInputs = with pkgs; [
         nodejs
+        mongodb-compass
     ];
 }
